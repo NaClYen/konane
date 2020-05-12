@@ -171,16 +171,6 @@ public class Game : MonoBehaviour
 
 }
 
-public static class Options
-{
-    public const int kCellCount = 36;
-    public const int kRow = 6;
-    public const int kColumn = 6;
-
-    public const string kEvCellTouched = "cell touched";
-
-}
-
 class CellList
 {
 
@@ -209,60 +199,4 @@ class CellList
     {
         return mCells2D[x, y];
     }
-}
-
-public interface IChessUnit
-{
-    IChessLayout Layout { get; set; }
-}
-
-public interface IChessLayout
-{
-    ChessType ChessType { get; set; }
-
-    void AppendTo(Transform t);
-}
-
-public interface IHintLayout
-{
-    HintType HintType { get; set; }
-    void AppendTo(Transform t);
-}
-
-
-public interface ICellLayout
-{
-    string Info { get; set; }
-    ICellLayout Init(IInfoCenter ic, int id);
-    Transform Transform {get;}
-}
-
-public interface IInfoCenter
-{
-    void InvokeEvent(string msg, object args);
-}
-public enum LinkPos
-{
-    Up = 0,
-    UpRight,
-    Right,
-    BottomRight,
-    Bottom,
-    BottomLeft,
-    Left,
-    UpLeft
-}
-
-
-public enum ChessType
-{
-    Black,
-    White
-}
-
-
-public enum HintType
-{
-    CanAttack,  // 可以進攻
-    CanGoTo,    // 可到達
 }

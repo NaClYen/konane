@@ -30,5 +30,5 @@ public interface ICellLayout
 
 public interface IInfoCenter
 {
-    void InvokeEvent(string msg, object args);
+    void InvokeEvent(string msg, object args = null);
 }

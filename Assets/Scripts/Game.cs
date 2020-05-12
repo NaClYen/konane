@@ -19,6 +19,7 @@ public class Game : MonoBehaviour
     RectTransform m_TableRoot = null;
     [SerializeField]
     RectTransform m_IdleChessRoot = null;
+    
 
     CellList mCells = null;
 
@@ -31,6 +32,8 @@ public class Game : MonoBehaviour
 
 
     InfoCenter mInfoCenter = new InfoCenter();
+
+    GameStatus mCurrentStatus;
 
     void Start()
     {
@@ -46,6 +49,8 @@ public class Game : MonoBehaviour
 
         // init chess
         InitChess();
+
+        SwitchGameStatus(GameStatus.BlackPickUp);
     }
 
     private void InfoCenter_OnAnyEvent(string msg, object args)
@@ -57,6 +62,9 @@ public class Game : MonoBehaviour
             case Options.kEvCellTouched:
                 HandleEvCellTouched(args);
                 break;
+            case Options.kEvGameStatusChanged:
+                HandleEvGameStatusChanged(args);
+                break;
             default:
                 break;
         }
@@ -67,10 +75,6 @@ public class Game : MonoBehaviour
         var id = (int)args;
 
         Debug.Log($"[HandleEvCellTouched]id: {id}");
-
-        var hint = Instantiate(m_HintPrefab, m_IdleChessRoot);
-        hint.HintType = HintType.CanAttack;
-        hint.AppendTo(mCells.Get(id).Layout.Transform);
     }
 
     void InitCells()
@@ -150,6 +154,78 @@ public class Game : MonoBehaviour
             return null;
 
         return mCells.GetByXy(x, y);
+    }
+
+    IHintLayout CreateOrGetHint()
+    {
+        return (mIdleHint.Count < 1) ? Instantiate(m_HintPrefab, m_IdleChessRoot) : mIdleHint.Dequeue();
+    }
+
+
+    void SwitchGameStatus(GameStatus s)
+    {
+        if (mCurrentStatus == s)
+            throw new System.Exception($"不應該有一樣的遊戲狀態: {s}");
+
+        mCurrentStatus = s;
+        mInfoCenter.InvokeEvent(Options.kEvGameStatusChanged, s);
+    }
+
+    void HandleEvGameStatusChanged(object args)
+    {
+        switch (mCurrentStatus)
+        {
+            case GameStatus.None:
+                ClearHints();
+                break;
+            case GameStatus.BlackPickUp:
+                {
+                    // show hint
+                    ClearHints();
+                    ShowHintAt(mCells.Get(0), HintType.CanAttack); // 角落A
+                    ShowHintAt(mCells.Get(Options.CellCount - 1), HintType.CanAttack); // 角落B
+                    var halfBoardSize = Options.BoardSize / 2;
+                    ShowHintAt(mCells.GetByXy(halfBoardSize - 1, halfBoardSize - 1), HintType.CanAttack); // 中間C
+                    ShowHintAt(mCells.GetByXy(halfBoardSize, halfBoardSize), HintType.CanAttack); // 中間D
+                }
+                break;
+            case GameStatus.BlackPickUpConfirm:
+                break;
+            case GameStatus.WhitePickUp:
+                break;
+            case GameStatus.WhitePickUpConfirm:
+                break;
+            case GameStatus.BlackAttackFrom:
+                break;
+            case GameStatus.BlackAttackTo:
+                break;
+            case GameStatus.WhiteAttackFrom:
+                break;
+            case GameStatus.WhiteAttackTo:
+                break;
+            case GameStatus.End:
+                break;
+            default:
+                break;
+        }
+    }
+
+    void ClearHints()
+    {
+        while (mActiveHint.Count > 0)
+        {
+            var hint = mActiveHint.Dequeue();
+            hint.AppendTo(m_IdleChessRoot); // 移動至閒置區
+            mIdleHint.Enqueue(hint); // 放進回收桶
+        }
+    }
+    
+    IHintLayout ShowHintAt(CellUnit cell, HintType type)
+    {
+        var hint = CreateOrGetHint();
+        hint.HintType = type;
+        hint.AppendTo(cell.Layout.Transform);
+        return hint;
     }
 
     #region test

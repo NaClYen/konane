@@ -35,6 +35,8 @@ public class Game : MonoBehaviour
 
     GameStatus mCurrentStatus;
 
+    HashSet<int> mFunctionalCells = new HashSet<int>();
+
     void Start()
     {
         Options.BoardSize = m_BoardSize;
@@ -62,8 +64,8 @@ public class Game : MonoBehaviour
             case Options.kEvCellTouched:
                 HandleEvCellTouched(args);
                 break;
-            case Options.kEvGameStatusChanged:
-                HandleEvGameStatusChanged(args);
+            case Options.kEvBlackPickUp:
+
                 break;
             default:
                 break;
@@ -74,7 +76,48 @@ public class Game : MonoBehaviour
     {
         var id = (int)args;
 
-        Debug.Log($"[HandleEvCellTouched]id: {id}");
+        Debug.Log($"[HandleEvCellTouched]mCurrentStatus:{mCurrentStatus}, id: {id}");
+
+        switch (mCurrentStatus)
+        {
+            case GameStatus.None:
+                break;
+            case GameStatus.BlackPickUp:
+                {
+                    var isTouchFunctionCell = mFunctionalCells.Contains(id);
+                    if (isTouchFunctionCell)
+                        SwitchGameStatus(GameStatus.BlackPickUpConfirm, id);
+                }
+                break;
+            case GameStatus.BlackPickUpConfirm:
+                {
+                    var isTouchFunctionCell = mFunctionalCells.Contains(id);
+                    if (isTouchFunctionCell)
+                    {
+                        // pickup 
+                        SwitchGameStatus(GameStatus.WhitePickUp, id);
+                    }
+                    else
+                        SwitchGameStatus(GameStatus.BlackPickUp);
+                }
+                break;
+            case GameStatus.WhitePickUp:
+                break;
+            case GameStatus.WhitePickUpConfirm:
+                break;
+            case GameStatus.BlackAttackFrom:
+                break;
+            case GameStatus.BlackAttackTo:
+                break;
+            case GameStatus.WhiteAttackFrom:
+                break;
+            case GameStatus.WhiteAttackTo:
+                break;
+            case GameStatus.End:
+                break;
+            default:
+                break;
+        }
     }
 
     void InitCells()
@@ -162,17 +205,13 @@ public class Game : MonoBehaviour
     }
 
 
-    void SwitchGameStatus(GameStatus s)
+    void SwitchGameStatus(GameStatus s, object args = null)
     {
         if (mCurrentStatus == s)
             throw new System.Exception($"不應該有一樣的遊戲狀態: {s}");
 
         mCurrentStatus = s;
-        mInfoCenter.InvokeEvent(Options.kEvGameStatusChanged, s);
-    }
 
-    void HandleEvGameStatusChanged(object args)
-    {
         switch (mCurrentStatus)
         {
             case GameStatus.None:
@@ -180,18 +219,30 @@ public class Game : MonoBehaviour
                 break;
             case GameStatus.BlackPickUp:
                 {
-                    // show hint
                     ClearHints();
-                    ShowHintAt(mCells.Get(0), HintType.CanAttack); // 角落A
-                    ShowHintAt(mCells.Get(Options.CellCount - 1), HintType.CanAttack); // 角落B
+                    ClearFunctionalCellData();
+
+                    // show hint
+                    ShowHintAt(mCells.Get(0), HintType.Select); // 角落A
+                    ShowHintAt(mCells.Get(Options.CellCount - 1), HintType.Select); // 角落B
                     var halfBoardSize = Options.BoardSize / 2;
-                    ShowHintAt(mCells.GetByXy(halfBoardSize - 1, halfBoardSize - 1), HintType.CanAttack); // 中間C
-                    ShowHintAt(mCells.GetByXy(halfBoardSize, halfBoardSize), HintType.CanAttack); // 中間D
+                    ShowHintAt(mCells.GetByXy(halfBoardSize - 1, halfBoardSize - 1), HintType.Select); // 中間C
+                    ShowHintAt(mCells.GetByXy(halfBoardSize, halfBoardSize), HintType.Select); // 中間D
                 }
                 break;
             case GameStatus.BlackPickUpConfirm:
+                {
+                    var id = (int)args;
+                    ClearHints();
+                    ClearFunctionalCellData();
+
+                    // show hint
+                    ShowHintAt(mCells.Get(id), HintType.Confirm);
+                }
                 break;
             case GameStatus.WhitePickUp:
+                {
+                }
                 break;
             case GameStatus.WhitePickUpConfirm:
                 break;
@@ -219,12 +270,27 @@ public class Game : MonoBehaviour
             mIdleHint.Enqueue(hint); // 放進回收桶
         }
     }
+    void ClearFunctionalCellData()
+    {
+        mFunctionalCells.Clear();
+    }
+
+    void RemoveChess(int index)
+    {
+        
+    }
     
     IHintLayout ShowHintAt(CellUnit cell, HintType type)
     {
+        // add to functional set
+        mFunctionalCells.Add(cell.Index);
+
         var hint = CreateOrGetHint();
         hint.HintType = type;
         hint.AppendTo(cell.Layout.Transform);
+
+        mActiveHint.Enqueue(hint);
+
         return hint;
     }
 

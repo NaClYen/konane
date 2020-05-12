@@ -8,5 +8,5 @@ public static class Options
     public static int CellCount = 64;
 
     public const string kEvCellTouched = "cell touched";
-    public const string kEvGameStatusChanged = "game status changed";
+    public const string kEvBlackPickUp = "black pick up";
 }

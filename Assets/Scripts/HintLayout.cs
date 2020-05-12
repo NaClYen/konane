@@ -18,10 +18,10 @@ public class HintLayout : MonoBehaviour, IHintLayout
 
             switch (mHintType)
             {
-                case HintType.CanAttack:
+                case HintType.Select:
                     m_Icon.color = Color.red;
                     break;
-                case HintType.CanGoTo:
+                case HintType.Confirm:
                     m_Icon.color = Color.magenta; ;
                     break;
                 default:

@@ -18,8 +18,8 @@ public enum ChessType
 
 public enum HintType
 {
-    CanAttack,  // 可以進攻
-    CanGoTo,    // 可到達
+    Select,  // 可以進攻
+    Confirm,    // 可到達
 }
 
 public enum GameStatus

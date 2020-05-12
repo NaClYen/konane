@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class Game : MonoBehaviour
 {
-    const int kCellCount = 36;
-
     [SerializeField]
     CellLayout m_CellPrefab = null;
     [SerializeField]
@@ -16,7 +14,8 @@ public class Game : MonoBehaviour
     RectTransform m_IdleChessRoot = null;
 
     CellList mCells = null;
-    Queue<IChessUnit> mIdleChesses = null;
+    Queue<IChessUnit> mIdleChesses = new Queue<IChessUnit>(Options.kCellCount);
+    Queue<IChessUnit> mActiveChesses = new Queue<IChessUnit>(Options.kCellCount);
 
     void Start()
     {
@@ -63,16 +62,10 @@ public class Game : MonoBehaviour
         for (int i = 0; i < Options.kCellCount; i++)
         {
             var chess = new ChessUnit();
-            mIdleChesses.Enqueue(chess);
-
             chess.Layout = Instantiate(m_ChessPrefab, m_IdleChessRoot);
-        }
 
-        // 放一顆棋子在特定 cell 上
-        {
-            var chess = mIdleChesses.Dequeue();
-            var cell = mCells.Get(0);
-            AppendChessToCell(chess, cell);
+            AppendChessToCell(chess, mCells.Get(i)); // 直接附加在對應的 cell 上
+            mActiveChesses.Enqueue(chess); // 丟進工作中的池內
         }
     }
 

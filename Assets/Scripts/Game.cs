@@ -107,6 +107,17 @@ public class Game : MonoBehaviour
 }
 
 
+
+public interface ICellLayout
+{
+    string Info { get; set; }
+    ICellLayout Init(IInfoCenter ic, int id);
+}
+
+public interface IInfoCenter
+{
+    void InvokeEvent(string msg, object args);
+}
 public enum LinkPos
 {
     Up = 0,

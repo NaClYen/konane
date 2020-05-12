@@ -1,9 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Game : MonoBehaviour
 {
+    [SerializeField]
+    int m_BoardSize = 8;
+    [SerializeField]
+    GridLayoutGroup m_BoardGridLayoutGroup = null;
     [SerializeField]
     CellLayout m_CellPrefab = null;
     [SerializeField]
@@ -17,11 +22,11 @@ public class Game : MonoBehaviour
 
     CellList mCells = null;
 
-    Queue<IChessUnit> mIdleChesses = new Queue<IChessUnit>(Options.kCellCount);
-    Queue<IChessUnit> mActiveChesses = new Queue<IChessUnit>(Options.kCellCount);
+    Queue<IChessUnit> mIdleChesses = new Queue<IChessUnit>(Options.CellCount);
+    Queue<IChessUnit> mActiveChesses = new Queue<IChessUnit>(Options.CellCount);
 
-    Queue<IHintLayout> mIdleHint = new Queue<IHintLayout>(Options.kCellCount);
-    Queue<IHintLayout> mActiveHint = new Queue<IHintLayout>(Options.kCellCount);
+    Queue<IHintLayout> mIdleHint = new Queue<IHintLayout>(Options.CellCount);
+    Queue<IHintLayout> mActiveHint = new Queue<IHintLayout>(Options.CellCount);
 
 
 
@@ -29,6 +34,12 @@ public class Game : MonoBehaviour
 
     void Start()
     {
+        Options.BoardSize = m_BoardSize;
+        Options.CellCount = Options.BoardSize * Options.BoardSize;
+
+        // adjust
+        m_BoardGridLayoutGroup.constraintCount = Options.BoardSize;
+
         mInfoCenter.OnAnyEvent += InfoCenter_OnAnyEvent;
 
         InitCells();
@@ -66,7 +77,7 @@ public class Game : MonoBehaviour
     {
         mCells = new CellList();
 
-        for (int i = 0; i < Options.kCellCount; i++)
+        for (int i = 0; i < Options.CellCount; i++)
         {
             var cell = mCells.Get(i);
             cell.Layout = Instantiate(m_CellPrefab, m_TableRoot.transform);
@@ -74,8 +85,8 @@ public class Game : MonoBehaviour
             cell.Index = i;
 
             // link cells - checked
-            var x = i % Options.kColumn;
-            var y = i / Options.kRow;
+            var x = i % Options.BoardSize;
+            var y = i / Options.BoardSize;
             LinkCell(cell, LinkPos.Up, x, y - 1);
             LinkCell(cell, LinkPos.UpRight, x + 1, y - 1);
             LinkCell(cell, LinkPos.Right, x + 1, y);
@@ -92,8 +103,8 @@ public class Game : MonoBehaviour
 
     void InitChess()
     {
-        mIdleChesses = new Queue<IChessUnit>(Options.kCellCount);
-        for (int i = 0; i < Options.kCellCount; i++)
+        mIdleChesses = new Queue<IChessUnit>(Options.CellCount);
+        for (int i = 0; i < Options.CellCount; i++)
         {
             var chess = new ChessUnit();
             chess.ChessType = GetChessTypeByInitialIndex(i); // 設定初始陣營
@@ -116,7 +127,7 @@ public class Game : MonoBehaviour
     ChessType GetChessTypeByInitialIndex(int index)
     {
         var columMod = index % 2;
-        var rowMod = (index / Options.kRow) % 2;
+        var rowMod = (index / Options.BoardSize) % 2;
         var totalMod = (columMod + rowMod) % 2;
 
         return totalMod == 0 ? ChessType.Black : ChessType.White;
@@ -175,17 +186,17 @@ class CellList
 {
 
     CellUnit[] mCells = null;
-    CellUnit[,] mCells2D = new CellUnit[6, 6];
+    CellUnit[,] mCells2D = new CellUnit[Options.BoardSize, Options.BoardSize];
 
     public CellList()
     {
-        mCells = new CellUnit[Options.kCellCount];
+        mCells = new CellUnit[Options.CellCount];
 
-        for (int i = 0; i < Options.kCellCount; i++)
+        for (int i = 0; i < Options.CellCount; i++)
         {
             var cell = new CellUnit();
             mCells[i] = cell;
-            mCells2D[i % Options.kColumn, i / Options.kRow] = cell;
+            mCells2D[i % Options.BoardSize, i / Options.BoardSize] = cell;
         }
     }
 

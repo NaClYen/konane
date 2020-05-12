@@ -150,6 +150,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 48d71302282c9ae44aeb6aa384629280, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_BoardSize: 8
+  m_BoardGridLayoutGroup: {fileID: 354562976}
   m_CellPrefab: {fileID: 6996000982253157260, guid: c3c6e6dd9c8727a478202ab7dd589e09,
     type: 3}
   m_ChessPrefab: {fileID: -6330060323966202475, guid: 77217e1c6403d464bbbde664127ac415,
@@ -232,10 +234,10 @@ MonoBehaviour:
   m_ChildAlignment: 0
   m_StartCorner: 0
   m_StartAxis: 0
-  m_CellSize: {x: 80, y: 80}
+  m_CellSize: {x: 60, y: 60}
   m_Spacing: {x: 0, y: 0}
   m_Constraint: 1
-  m_ConstraintCount: 6
+  m_ConstraintCount: 8
 --- !u!114 &354562977
 MonoBehaviour:
   m_ObjectHideFlags: 0

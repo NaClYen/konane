@@ -69,7 +69,18 @@ public class Game : MonoBehaviour
         }
 
         // 放一顆棋子在特定 cell 上
-        
+        {
+            var chess = mIdleChesses.Dequeue();
+            var cell = mCells.Get(0);
+            AppendChessToCell(chess, cell);
+        }
+    }
+
+    void AppendChessToCell(IChessUnit chess, CellUnit cell)
+    {
+        var to = cell.Layout.Transform;
+        // TODO: 應該要處理 `to` 為 null 的狀況
+        chess.Layout.AppendTo(to);
     }
 
 
@@ -178,6 +189,7 @@ public interface IChessUnit
 public interface IChessLayout
 {
     ChessType ChessType { get; set; }
+
     void AppendTo(Transform t);
 }
 
@@ -191,6 +203,7 @@ public interface ICellLayout
 {
     string Info { get; set; }
     ICellLayout Init(IInfoCenter ic, int id);
+    Transform Transform {get;}
 }
 
 public interface IInfoCenter

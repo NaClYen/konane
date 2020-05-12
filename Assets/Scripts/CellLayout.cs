@@ -38,6 +38,8 @@ public class CellLayout : MonoBehaviour, ICellLayout
         get => m_Info.text;
         set => m_Info.text = value;
     }
+
+    public Transform Transform => transform;
 }
 
 public class FakeCellLayout : ICellLayout
@@ -46,6 +48,8 @@ public class FakeCellLayout : ICellLayout
     int mId;
 
     public string Info { get; set; }
+
+    public Transform Transform => null;
 
     public ICellLayout Init(IInfoCenter ic, int id)
     {

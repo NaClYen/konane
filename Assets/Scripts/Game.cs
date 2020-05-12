@@ -16,13 +16,21 @@ public class Game : MonoBehaviour
     CellList mCells = null;
     Queue<IChessUnit> mIdleChesses = new Queue<IChessUnit>(Options.kCellCount);
     Queue<IChessUnit> mActiveChesses = new Queue<IChessUnit>(Options.kCellCount);
+    InfoCenter mInfoCenter = new InfoCenter();
 
     void Start()
     {
+        mInfoCenter.OnAnyEvent += InfoCenter_OnAnyEvent;
+
         InitCells();
 
         // init chess
         InitChess();
+    }
+
+    private void InfoCenter_OnAnyEvent(string msg, object args)
+    {
+        Debug.Log($"[InfoCenter]{msg}, args: {args}");
     }
 
     void InitCells()
@@ -33,6 +41,7 @@ public class Game : MonoBehaviour
         {
             var cell = mCells.Get(i);
             cell.Layout = Instantiate(m_CellPrefab, m_TableRoot.transform);
+            cell.Layout.Init(mInfoCenter, i);
             cell.Index = i;
 
             // link cells - checked

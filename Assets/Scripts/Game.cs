@@ -67,9 +67,6 @@ public class Game : MonoBehaviour
             case Options.kEvCellTouched:
                 HandleEvCellTouched(args);
                 break;
-            case Options.kEvBlackPickUp:
-
-                break;
             default:
                 break;
         }
@@ -78,8 +75,11 @@ public class Game : MonoBehaviour
     void HandleEvCellTouched(object args)
     {
         var id = (int)args;
+        var isTouchFunctionCell = mFunctionalCells.Contains(id);
 
-        Debug.Log($"[HandleEvCellTouched]mCurrentStatus:{mCurrentStatus}, id: {id}");
+        Debug.Log($"[HandleEvCellTouched]mCurrentStatus:{mCurrentStatus}, id: {id}, isTouchFunctionCell: {isTouchFunctionCell}");
+
+
 
         switch (mCurrentStatus)
         {
@@ -87,14 +87,12 @@ public class Game : MonoBehaviour
                 break;
             case GameStatus.BlackPickUp:
                 {
-                    var isTouchFunctionCell = mFunctionalCells.Contains(id);
                     if (isTouchFunctionCell)
                         SwitchGameStatus(GameStatus.BlackPickUpConfirm, id);
                 }
                 break;
             case GameStatus.BlackPickUpConfirm:
                 {
-                    var isTouchFunctionCell = mFunctionalCells.Contains(id);
                     if (isTouchFunctionCell)
                     {
                         // remove chess 
@@ -107,8 +105,22 @@ public class Game : MonoBehaviour
                 }
                 break;
             case GameStatus.WhitePickUp:
+                {
+                    if (isTouchFunctionCell)
+                        SwitchGameStatus(GameStatus.WhitePickUpConfirm, id);
+                }
                 break;
             case GameStatus.WhitePickUpConfirm:
+                {
+                    if (isTouchFunctionCell)
+                    {
+                        // remove chess 
+                        KillChess(id);
+                        SwitchGameStatus(GameStatus.BlackAttackFrom); // next
+                    }
+                    else
+                        SwitchGameStatus(GameStatus.WhitePickUp); // above
+                }
                 break;
             case GameStatus.BlackAttackFrom:
                 break;
@@ -268,6 +280,14 @@ public class Game : MonoBehaviour
                 }
                 break;
             case GameStatus.WhitePickUpConfirm:
+                {
+                    var id = (int)args;
+                    ClearHints();
+                    ClearFunctionalCellData();
+
+                    // show hint
+                    ShowHintAt(mCells.Get(id), HintType.Confirm);
+                }
                 break;
             case GameStatus.BlackAttackFrom:
                 break;

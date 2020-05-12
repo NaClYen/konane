@@ -49,10 +49,6 @@ public class Game : MonoBehaviour
 
             // debug
             cell.Layout.Info = i.ToString();
-
-
-            //cell.CellStatus = GetStatusByInitialIndex(i);
-            //cell.Layout.SetStatus(cell.CellStatus);
         }
     }
 
@@ -62,9 +58,11 @@ public class Game : MonoBehaviour
         for (int i = 0; i < Options.kCellCount; i++)
         {
             var chess = new ChessUnit();
+            chess.ChessType = GetChessTypeByInitialIndex(i); // 設定初始陣營
             chess.Layout = Instantiate(m_ChessPrefab, m_IdleChessRoot);
 
             AppendChessToCell(chess, mCells.Get(i)); // 直接附加在對應的 cell 上
+            chess.Layout.ChessType = chess.ChessType; // refresh UI
             mActiveChesses.Enqueue(chess); // 丟進工作中的池內
         }
     }
@@ -77,13 +75,13 @@ public class Game : MonoBehaviour
     }
 
 
-    CellStatus GetStatusByInitialIndex(int index)
+    ChessType GetChessTypeByInitialIndex(int index)
     {
         var columMod = index % 2;
         var rowMod = (index / Options.kRow) % 2;
         var totalMod = (columMod + rowMod) % 2;
 
-        return totalMod == 0 ? CellStatus.Black : CellStatus.White;
+        return totalMod == 0 ? ChessType.Black : ChessType.White;
     }
 
     void LinkCell(CellUnit cell, LinkPos pos, int x, int y)

@@ -7,5 +7,6 @@ using UnityEngine;
 /// </summary>
 public class ChessUnit : IChessUnit
 {
+    public ChessType ChessType { get; set; }
     public IChessLayout Layout { get; set; }
 }

@@ -38,6 +38,7 @@ public class ChessLayout : MonoBehaviour, IChessLayout
     public void AppendTo(Transform t)
     {
         transform.SetParent(t);
-        GetComponent<RectTransform>().sizeDelta = Vector2.zero; // reset to fit parent
+        // reset to fit parent
+        GetComponent<RectTransform>().FitToParent();
     }
 }

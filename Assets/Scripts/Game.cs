@@ -9,13 +9,22 @@ public class Game : MonoBehaviour
     [SerializeField]
     ChessLayout m_ChessPrefab = null;
     [SerializeField]
+    HintLayout m_HintPrefab = null;
+    [SerializeField]
     RectTransform m_TableRoot = null;
     [SerializeField]
     RectTransform m_IdleChessRoot = null;
 
     CellList mCells = null;
+
     Queue<IChessUnit> mIdleChesses = new Queue<IChessUnit>(Options.kCellCount);
     Queue<IChessUnit> mActiveChesses = new Queue<IChessUnit>(Options.kCellCount);
+
+    Queue<IHintLayout> mIdleHint = new Queue<IHintLayout>(Options.kCellCount);
+    Queue<IHintLayout> mActiveHint = new Queue<IHintLayout>(Options.kCellCount);
+
+
+
     InfoCenter mInfoCenter = new InfoCenter();
 
     void Start()
@@ -31,6 +40,26 @@ public class Game : MonoBehaviour
     private void InfoCenter_OnAnyEvent(string msg, object args)
     {
         Debug.Log($"[InfoCenter]{msg}, args: {args}");
+
+        switch (msg)
+        {
+            case Options.kEvCellTouched:
+                HandleEvCellTouched(args);
+                break;
+            default:
+                break;
+        }
+    }
+
+    void HandleEvCellTouched(object args)
+    {
+        var id = (int)args;
+
+        Debug.Log($"[HandleEvCellTouched]id: {id}");
+
+        var hint = Instantiate(m_HintPrefab, m_IdleChessRoot);
+        hint.HintType = HintType.CanAttack;
+        hint.AppendTo(mCells.Get(id).Layout.Transform);
     }
 
     void InitCells()
@@ -148,8 +177,9 @@ public static class Options
     public const int kRow = 6;
     public const int kColumn = 6;
 
-}
+    public const string kEvCellTouched = "cell touched";
 
+}
 
 class CellList
 {
@@ -196,6 +226,7 @@ public interface IChessLayout
 public interface IHintLayout
 {
     HintType HintType { get; set; }
+    void AppendTo(Transform t);
 }
 
 

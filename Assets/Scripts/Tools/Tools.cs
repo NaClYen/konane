@@ -14,4 +14,9 @@ public static class Tools
 
         return c;
     }
+    public static void FitToParent(this RectTransform rt)
+    {
+        rt.sizeDelta = Vector2.zero;
+        rt.anchoredPosition = Vector2.zero;
+    }
 }

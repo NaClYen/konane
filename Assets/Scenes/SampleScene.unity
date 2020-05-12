@@ -154,6 +154,8 @@ MonoBehaviour:
     type: 3}
   m_ChessPrefab: {fileID: -6330060323966202475, guid: 77217e1c6403d464bbbde664127ac415,
     type: 3}
+  m_HintPrefab: {fileID: 3921122571989914431, guid: 1c3ff9a70ce91b646ae0ed7745888240,
+    type: 3}
   m_TableRoot: {fileID: 354562975}
   m_IdleChessRoot: {fileID: 521889299}
   Test_CellX: 0

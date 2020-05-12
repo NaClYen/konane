@@ -61,7 +61,7 @@ public class FakeCellLayout : ICellLayout
 
     public void OnClick()
     {
-        mInfoCenter.InvokeEvent("cell touched", mId);
+        mInfoCenter.InvokeEvent(Options.kEvCellTouched, mId);
     }
 
 }

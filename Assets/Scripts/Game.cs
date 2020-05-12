@@ -9,23 +9,36 @@ public class Game : MonoBehaviour
     [SerializeField]
     CellLayout m_CellPrefab = null;
     [SerializeField]
+    ChessLayout m_ChessPrefab = null;
+    [SerializeField]
     RectTransform m_TableRoot = null;
+    [SerializeField]
+    RectTransform m_IdleChessRoot = null;
 
     CellList mCells = null;
+    IChessUnit[] mChesses = null;
 
     void Start()
     {
+        InitCells();
+
+        // init chess
+        InitChess();
+    }
+
+    void InitCells()
+    {
         mCells = new CellList();
 
-        for (int i = 0; i < CellList.kCellCount; i++)
+        for (int i = 0; i < Options.kCellCount; i++)
         {
             var cell = mCells.Get(i);
             cell.Layout = Instantiate(m_CellPrefab, m_TableRoot.transform);
             cell.Index = i;
 
             // link cells - checked
-            var x = i % CellList.kColumn;
-            var y = i / CellList.kRow;
+            var x = i % Options.kColumn;
+            var y = i / Options.kRow;
             LinkCell(cell, LinkPos.Up, x, y - 1);
             LinkCell(cell, LinkPos.UpRight, x + 1, y - 1);
             LinkCell(cell, LinkPos.Right, x + 1, y);
@@ -42,12 +55,25 @@ public class Game : MonoBehaviour
             //cell.CellStatus = GetStatusByInitialIndex(i);
             //cell.Layout.SetStatus(cell.CellStatus);
         }
-
     }
+
+    void InitChess()
+    {
+        mChesses = new IChessUnit[Options.kCellCount];
+        for (int i = 0; i < Options.kCellCount; i++)
+        {
+            var chess = new ChessUnit();
+            mChesses[i] = chess;
+
+            chess.Layout = Instantiate(m_ChessPrefab, m_IdleChessRoot);
+        }
+    }
+
+
     CellStatus GetStatusByInitialIndex(int index)
     {
         var columMod = index % 2;
-        var rowMod = (index / CellList.kRow) % 2;
+        var rowMod = (index / Options.kRow) % 2;
         var totalMod = (columMod + rowMod) % 2;
 
         return totalMod == 0 ? CellStatus.Black : CellStatus.White;
@@ -102,24 +128,30 @@ public class Game : MonoBehaviour
 
 }
 
-class CellList
+public static class Options
 {
     public const int kCellCount = 36;
     public const int kRow = 6;
     public const int kColumn = 6;
+
+}
+
+
+class CellList
+{
 
     CellUnit[] mCells = null;
     CellUnit[,] mCells2D = new CellUnit[6, 6];
 
     public CellList()
     {
-        mCells = new CellUnit[kCellCount];
+        mCells = new CellUnit[Options.kCellCount];
 
-        for (int i = 0; i < kCellCount; i++)
+        for (int i = 0; i < Options.kCellCount; i++)
         {
             var cell = new CellUnit();
             mCells[i] = cell;
-            mCells2D[i % kColumn, i / kRow] = cell;
+            mCells2D[i % Options.kColumn, i / Options.kRow] = cell;
         }
     }
 
@@ -137,13 +169,13 @@ class CellList
 
 public interface IChessUnit
 {
-    int Id { get; set; }
-    ICellLayout Layout { get; set; }
+    IChessLayout Layout { get; set; }
 }
 
 public interface IChessLayout
 {
     ChessType ChessType { get; set; }
+    void AppendTo(Transform t);
 }
 
 public interface IHintLayout

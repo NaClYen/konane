@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5501262249845089007}
-  - component: {fileID: 8684535015167588115}
+  - component: {fileID: -6330060323966202475}
   m_Layer: 5
   m_Name: Chess
   m_TagString: Untagged
@@ -33,11 +33,11 @@ RectTransform:
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &8684535015167588115
+--- !u!114 &-6330060323966202475
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -46,11 +46,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 851754785977879861}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d8b3abd27883cf74faca4930bfb2f5b4, type: 3}
+  m_Script: {fileID: 11500000, guid: 4572161311bed13459382f04be00d3da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_BackgroundImage: {fileID: 894601655509615447}
-  m_Info: {fileID: 5952622191135232603}
+  m_Icon: {fileID: 894601655509615447}
+  m_WhiteColor: {r: 1, g: 1, b: 1, a: 1}
+  m_BlackColor: {r: 0, g: 0, b: 0, a: 1}
 --- !u!1 &884701085822418888
 GameObject:
   m_ObjectHideFlags: 0
@@ -110,7 +111,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_OnCullStateChanged:
     m_PersistentCalls:

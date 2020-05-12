@@ -16,7 +16,7 @@ public class Game : MonoBehaviour
     RectTransform m_IdleChessRoot = null;
 
     CellList mCells = null;
-    IChessUnit[] mChesses = null;
+    Queue<IChessUnit> mIdleChesses = null;
 
     void Start()
     {
@@ -59,14 +59,17 @@ public class Game : MonoBehaviour
 
     void InitChess()
     {
-        mChesses = new IChessUnit[Options.kCellCount];
+        mIdleChesses = new Queue<IChessUnit>(Options.kCellCount);
         for (int i = 0; i < Options.kCellCount; i++)
         {
             var chess = new ChessUnit();
-            mChesses[i] = chess;
+            mIdleChesses.Enqueue(chess);
 
             chess.Layout = Instantiate(m_ChessPrefab, m_IdleChessRoot);
         }
+
+        // 放一顆棋子在特定 cell 上
+        
     }
 
 

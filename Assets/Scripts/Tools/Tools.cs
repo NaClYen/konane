@@ -7,7 +7,7 @@ public static class Tools
 {
     public static T EnsureComponent<T>(this MonoBehaviour m) where T : Component
     {
-        var c = m.GetComponent<T>();
+        var c = m.GetComponentInChildren<T>();
 
         if (c == null)
             throw new NullReferenceException();

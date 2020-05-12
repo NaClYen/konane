@@ -11,32 +11,21 @@ public class Game : MonoBehaviour
     [SerializeField]
     RectTransform m_TableRoot = null;
 
-    CellUnit[] mCells = null;
-    CellUnit[,] mCells2D = new CellUnit[6, 6]; // 連結用
+    CellList mCells = null;
 
     void Start()
     {
-        mCells = new CellUnit[kCellCount];
-        for (int i = 0; i < kCellCount; i++)
-        {
-            var cell = new CellUnit();
-            mCells[i] = cell;
-            mCells2D[i % 6, i / 6] = cell;
-        }
+        mCells = new CellList();
 
-        for (int i = 0; i < kCellCount; i++)
+        for (int i = 0; i < CellList.kCellCount; i++)
         {
-            var cell = mCells[i];
+            var cell = mCells.Get(i);
             cell.Layout = Instantiate(m_CellPrefab, m_TableRoot.transform);
             cell.Index = i;
-            cell.CellStatus = GetStatusByInitialIndex(i);
-
-            // init layout - checked
-            cell.Layout.SetStatus(cell.CellStatus);
 
             // link cells - checked
-            var x = i % 6;
-            var y = i / 6;
+            var x = i % CellList.kColumn;
+            var y = i / CellList.kRow;
             LinkCell(cell, LinkPos.Up, x, y - 1);
             LinkCell(cell, LinkPos.UpRight, x + 1, y - 1);
             LinkCell(cell, LinkPos.Right, x + 1, y);
@@ -45,13 +34,20 @@ public class Game : MonoBehaviour
             LinkCell(cell, LinkPos.BottomLeft, x - 1, y + 1);
             LinkCell(cell, LinkPos.Left, x - 1, y);
             LinkCell(cell, LinkPos.UpLeft, x - 1, y - 1);
+
+            // debug
+            cell.Layout.Info = i.ToString();
+
+
+            //cell.CellStatus = GetStatusByInitialIndex(i);
+            //cell.Layout.SetStatus(cell.CellStatus);
         }
 
     }
     CellStatus GetStatusByInitialIndex(int index)
     {
         var columMod = index % 2;
-        var rowMod = (index / 6) % 2;
+        var rowMod = (index / CellList.kRow) % 2;
         var totalMod = (columMod + rowMod) % 2;
 
         return totalMod == 0 ? CellStatus.Black : CellStatus.White;
@@ -73,7 +69,7 @@ public class Game : MonoBehaviour
         if (y >= 6)
             return null;
 
-        return mCells2D[x, y];
+        return mCells.GetByXy(x, y);
     }
 
     #region test
@@ -106,6 +102,54 @@ public class Game : MonoBehaviour
 
 }
 
+class CellList
+{
+    public const int kCellCount = 36;
+    public const int kRow = 6;
+    public const int kColumn = 6;
+
+    CellUnit[] mCells = null;
+    CellUnit[,] mCells2D = new CellUnit[6, 6];
+
+    public CellList()
+    {
+        mCells = new CellUnit[kCellCount];
+
+        for (int i = 0; i < kCellCount; i++)
+        {
+            var cell = new CellUnit();
+            mCells[i] = cell;
+            mCells2D[i % kColumn, i / kRow] = cell;
+        }
+    }
+
+
+    public CellUnit Get(int index)
+    {
+        return mCells[index];
+    }
+
+    public CellUnit GetByXy(int x, int y)
+    {
+        return mCells2D[x, y];
+    }
+}
+
+public interface IChessUnit
+{
+    int Id { get; set; }
+    ICellLayout Layout { get; set; }
+}
+
+public interface IChessLayout
+{
+    ChessType ChessType { get; set; }
+}
+
+public interface IHintLayout
+{
+    HintType HintType { get; set; }
+}
 
 
 public interface ICellLayout
@@ -128,4 +172,18 @@ public enum LinkPos
     BottomLeft,
     Left,
     UpLeft
+}
+
+
+public enum ChessType
+{
+    Black,
+    White
+}
+
+
+public enum HintType
+{
+    CanAttack,  // 可以進攻
+    CanGoTo,    // 可到達
 }

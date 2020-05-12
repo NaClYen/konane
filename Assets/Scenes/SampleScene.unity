@@ -150,9 +150,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 48d71302282c9ae44aeb6aa384629280, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_CellPrefab: {fileID: 4147674026831640589, guid: c3c6e6dd9c8727a478202ab7dd589e09,
+  m_CellPrefab: {fileID: 6996000982253157260, guid: c3c6e6dd9c8727a478202ab7dd589e09,
     type: 3}
   m_TableRoot: {fileID: 354562975}
+  Test_CellX: 0
+  Test_CellY: 0
 --- !u!4 &347282907
 Transform:
   m_ObjectHideFlags: 0

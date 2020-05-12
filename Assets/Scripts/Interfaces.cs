@@ -4,7 +4,9 @@ using UnityEngine;
 
 public interface IChessUnit
 {
+    ChessType ChessType { get; set; }
     IChessLayout Layout { get; set; }
+    int Index { get; set; }
 }
 
 public interface IChessLayout

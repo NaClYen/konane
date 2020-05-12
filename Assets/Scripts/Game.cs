@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -24,10 +25,10 @@ public class Game : MonoBehaviour
     CellList mCells = null;
 
     Queue<IChessUnit> mIdleChesses = new Queue<IChessUnit>(Options.CellCount);
-    Queue<IChessUnit> mActiveChesses = new Queue<IChessUnit>(Options.CellCount);
+    HashSet<IChessUnit> mActiveChesses = new HashSet<IChessUnit>();
 
     Queue<IHintLayout> mIdleHint = new Queue<IHintLayout>(Options.CellCount);
-    Queue<IHintLayout> mActiveHint = new Queue<IHintLayout>(Options.CellCount);
+    HashSet<IHintLayout> mActiveHint = new HashSet<IHintLayout>();
 
 
 
@@ -36,6 +37,8 @@ public class Game : MonoBehaviour
     GameStatus mCurrentStatus;
 
     HashSet<int> mFunctionalCells = new HashSet<int>();
+
+    int mBleckPickedIndex = -1;
 
     void Start()
     {
@@ -94,11 +97,13 @@ public class Game : MonoBehaviour
                     var isTouchFunctionCell = mFunctionalCells.Contains(id);
                     if (isTouchFunctionCell)
                     {
-                        // pickup 
-                        SwitchGameStatus(GameStatus.WhitePickUp, id);
+                        // remove chess 
+                        KillChess(id);
+                        mBleckPickedIndex = id; // 為了白棋拿棋用
+                        SwitchGameStatus(GameStatus.WhitePickUp); // next
                     }
                     else
-                        SwitchGameStatus(GameStatus.BlackPickUp);
+                        SwitchGameStatus(GameStatus.BlackPickUp); // above
                 }
                 break;
             case GameStatus.WhitePickUp:
@@ -134,14 +139,14 @@ public class Game : MonoBehaviour
             // link cells - checked
             var x = i % Options.BoardSize;
             var y = i / Options.BoardSize;
-            LinkCell(cell, LinkPos.Up, x, y - 1);
-            LinkCell(cell, LinkPos.UpRight, x + 1, y - 1);
-            LinkCell(cell, LinkPos.Right, x + 1, y);
+            LinkCell(cell, LinkPos.Up,          x + 0, y - 1);
+            LinkCell(cell, LinkPos.UpRight,     x + 1, y - 1);
+            LinkCell(cell, LinkPos.Right,       x + 1, y + 0);
             LinkCell(cell, LinkPos.BottomRight, x + 1, y + 1);
-            LinkCell(cell, LinkPos.Bottom, x, y + 1);
-            LinkCell(cell, LinkPos.BottomLeft, x - 1, y + 1);
-            LinkCell(cell, LinkPos.Left, x - 1, y);
-            LinkCell(cell, LinkPos.UpLeft, x - 1, y - 1);
+            LinkCell(cell, LinkPos.Bottom,      x + 0, y + 1);
+            LinkCell(cell, LinkPos.BottomLeft,  x - 1, y + 1);
+            LinkCell(cell, LinkPos.Left,        x - 1, y + 0);
+            LinkCell(cell, LinkPos.UpLeft,      x - 1, y - 1);
 
             // debug
             cell.Layout.Info = i.ToString();
@@ -159,7 +164,7 @@ public class Game : MonoBehaviour
 
             AppendChessToCell(chess, mCells.Get(i)); // 直接附加在對應的 cell 上
             chess.Layout.ChessType = chess.ChessType; // refresh UI
-            mActiveChesses.Enqueue(chess); // 丟進工作中的池內
+            mActiveChesses.Add(chess); // 丟進工作中的池內
         }
     }
 
@@ -168,6 +173,7 @@ public class Game : MonoBehaviour
         var to = cell.Layout.Transform;
         // TODO: 應該要處理 `to` 為 null 的狀況
         chess.Layout.AppendTo(to);
+        chess.Index = cell.Index;
     }
 
 
@@ -189,11 +195,11 @@ public class Game : MonoBehaviour
     {
         if (x < 0)
             return null;
-        if (x >= 6)
+        if (x >= Options.BoardSize)
             return null;
         if (y < 0)
             return null;
-        if (y >= 6)
+        if (y >= Options.BoardSize)
             return null;
 
         return mCells.GetByXy(x, y);
@@ -242,6 +248,23 @@ public class Game : MonoBehaviour
                 break;
             case GameStatus.WhitePickUp:
                 {
+                    ClearHints();
+                    ClearFunctionalCellData();
+
+                    {
+                        var blackPicked = mCells.Get(mBleckPickedIndex);
+
+                        void ShowHintIfNeighborExist(LinkPos pos)
+                        {
+                            if (blackPicked.Neighbors[pos] != null)
+                                ShowHintAt(blackPicked.Neighbors[pos], HintType.Confirm);
+                        }
+
+                        ShowHintIfNeighborExist(LinkPos.Bottom);
+                        ShowHintIfNeighborExist(LinkPos.Left);
+                        ShowHintIfNeighborExist(LinkPos.Up);
+                        ShowHintIfNeighborExist(LinkPos.Right);
+                    }
                 }
                 break;
             case GameStatus.WhitePickUpConfirm:
@@ -263,11 +286,14 @@ public class Game : MonoBehaviour
 
     void ClearHints()
     {
-        while (mActiveHint.Count > 0)
+        if (mActiveHint.Count > 0)
         {
-            var hint = mActiveHint.Dequeue();
-            hint.AppendTo(m_IdleChessRoot); // 移動至閒置區
-            mIdleHint.Enqueue(hint); // 放進回收桶
+            var hints = mActiveHint.ToArray();
+            foreach (var hint in hints)
+            {
+                hint.AppendTo(m_IdleChessRoot); // 移動至閒置區
+                mIdleHint.Enqueue(hint); // 放進回收桶
+            }
         }
     }
     void ClearFunctionalCellData()
@@ -275,9 +301,18 @@ public class Game : MonoBehaviour
         mFunctionalCells.Clear();
     }
 
-    void RemoveChess(int index)
+    void KillChess(int index)
     {
-        
+        IChessUnit unit = null;
+        foreach (var chess in mActiveChesses)
+        {
+            if (chess.Index == index)
+                unit = chess;
+        }
+
+        mActiveChesses.Remove(unit);
+        mIdleChesses.Enqueue(unit);
+        unit.Layout.AppendTo(m_IdleChessRoot);
     }
     
     IHintLayout ShowHintAt(CellUnit cell, HintType type)
@@ -289,7 +324,7 @@ public class Game : MonoBehaviour
         hint.HintType = type;
         hint.AppendTo(cell.Layout.Transform);
 
-        mActiveHint.Enqueue(hint);
+        mActiveHint.Add(hint);
 
         return hint;
     }

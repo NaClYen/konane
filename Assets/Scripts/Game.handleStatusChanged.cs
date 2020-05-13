@@ -18,6 +18,12 @@ public partial class Game
             case GameStatus.None:
                 CleanAll();
                 break;
+            case GameStatus.ReadyToStart:
+                {
+                    CleanAll();
+
+                }
+                break;
             case GameStatus.BlackPickUp:
                 {
                     CleanAll();

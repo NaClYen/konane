@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
+
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -47,13 +49,19 @@ public partial class Game : MonoBehaviour
         mInfoCenter.OnAnyEvent += InfoCenter_OnAnyEvent;
 
         InitCells();
-
-        // init chess
-        InitChess();
-
-        // init hint pool
+        mChessPool.Init(m_ChessPrefab, m_IdleRoot);
         mHintPool.Init(m_HintPrefab, m_IdleRoot);
 
+        RestartGame();
+    }
+
+    void RestartGame()
+    {
+        mCurrentStatus = GameStatus.None;
+
+        InitChess();
+
+        //SwitchGameStatus(GameStatus.ReadyToStart);
         SwitchGameStatus(GameStatus.BlackPickUp);
     }
     void InfoCenter_OnAnyEvent(string msg, object args)
@@ -72,7 +80,7 @@ public partial class Game : MonoBehaviour
     {
         mCells = new CellList();
 
-        for (int i = 0; i < Options.CellCount; i++)
+        for (var i = 0; i < Options.CellCount; i++)
         {
             var cell = mCells.Get(i);
             cell.Layout = Instantiate(m_CellPrefab, m_TableRoot.transform);
@@ -83,13 +91,9 @@ public partial class Game : MonoBehaviour
             var x = i % Options.BoardSize;
             var y = i / Options.BoardSize;
             LinkCell(cell, LinkDirection.Up, x + 0, y - 1);
-            LinkCell(cell, LinkDirection.UpRight, x + 1, y - 1);
             LinkCell(cell, LinkDirection.Right, x + 1, y + 0);
-            LinkCell(cell, LinkDirection.BottomRight, x + 1, y + 1);
             LinkCell(cell, LinkDirection.Bottom, x + 0, y + 1);
-            LinkCell(cell, LinkDirection.BottomLeft, x - 1, y + 1);
             LinkCell(cell, LinkDirection.Left, x - 1, y + 0);
-            LinkCell(cell, LinkDirection.UpLeft, x - 1, y - 1);
 
             // debug
             cell.Layout.Info = i.ToString();
@@ -98,21 +102,18 @@ public partial class Game : MonoBehaviour
 
     void InitChess()
     {
-        mChessPool.Init(m_ChessPrefab, m_IdleRoot);
-
         for (var i = 0; i < Options.CellCount; i++)
         {
             var chess = mChessPool.New();
             chess.ChessType = GetChessTypeByInitialIndex(i); // 設定初始陣營
+            chess.Layout.ChessType = chess.ChessType; // switch icon
             AppendChessToCell(chess, mCells.Get(i)); // 直接附加在對應的 cell 上
-            chess.Layout.ChessType = chess.ChessType; // refresh UI
         }
     }
 
     void AppendChessToCell(IChessUnit chess, CellUnit cell)
     {
         var to = cell.Layout.Transform;
-        // TODO: 應該要處理 `to` 為 null 的狀況
         chess.Layout.AppendTo(to);
         chess.Index = cell.Index;
     }

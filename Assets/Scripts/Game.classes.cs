@@ -6,17 +6,16 @@ using Object = UnityEngine.Object;
 class CellList
 {
     CellUnit[] mCells = null;
-    CellUnit[,] mCells2D = new CellUnit[Options.BoardSize, Options.BoardSize];
+
 
     public CellList()
     {
         mCells = new CellUnit[Options.CellCount];
 
-        for (int i = 0; i < Options.CellCount; i++)
+        for (var i = 0; i < Options.CellCount; i++)
         {
             var cell = new CellUnit();
             mCells[i] = cell;
-            mCells2D[i % Options.BoardSize, i / Options.BoardSize] = cell;
         }
     }
 
@@ -33,7 +32,7 @@ class CellList
 
     public CellUnit GetByXy(int x, int y)
     {
-        return mCells2D[x, y];
+        return mCells[x + y * Options.BoardSize];
     }
 }
 
@@ -61,6 +60,10 @@ class ChessPool
             chessUnit = new ChessUnit();
             chessUnit.Layout = Object.Instantiate(mPrefab, mIdleRoot);
         }
+
+        // init data
+        chessUnit.ChessType = ChessType.Black;
+        chessUnit.Index = -1;
 
         // 丟進工作中的池內
         ActiveChesses.Add(chessUnit);
@@ -109,6 +112,9 @@ class HintPool
             hint = new HintUnit();
             hint.Layout = Object.Instantiate(mPrefab, mIdleRoot);
         }
+
+        // init data
+        hint.Index = -1;
 
         ActiveHints.Add(hint);
         return hint;

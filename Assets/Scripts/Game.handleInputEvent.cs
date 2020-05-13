@@ -14,6 +14,8 @@ public partial class Game
         {
             case GameStatus.None:
                 break;
+            case GameStatus.ReadyToStart:
+                break;
             case GameStatus.BlackPickUp:
                 {
                     if (isTouchFunctionCell)

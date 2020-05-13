@@ -124,6 +124,10 @@ public partial class Game
                 }
                 break;
             case GameStatus.End:
+                {
+                    var winner = (ChessType)args;
+                    Debug.LogWarning($"winner is {winner}!!!");
+                }
                 break;
         }
     }

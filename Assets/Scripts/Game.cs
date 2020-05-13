@@ -144,8 +144,8 @@ public class Game : MonoBehaviour
                         KillBetween(attackStartCell, jumpedCell, direction);
 
                         // move attacker
-                        var attackerChess = mChessPool.GetInActive(mAttackerSelection);
-                        attackerChess.Layout.AppendTo(jumpedCell.Layout.Transform);
+                        var attackerChess = mChessPool.Get(mAttackerSelection);
+                        AppendChessToCell(attackerChess, jumpedCell);
 
                         // reset data
                         mAttackerSelection = -1;
@@ -159,8 +159,34 @@ public class Game : MonoBehaviour
                 }
                 break;
             case GameStatus.WhiteAttackFrom:
+                {
+                    if (isTouchFunctionCell)
+                    {
+                        mAttackerSelection = id;
+                        SwitchGameStatus(GameStatus.WhiteAttackTo); // next
+                    }
+                }
                 break;
             case GameStatus.WhiteAttackTo:
+                {
+                    if (isTouchFunctionCell)
+                    {
+                        // kill chess(es)
+                        Debug.Log($"jump to cell:{id}");
+
+                        var attackStartCell = mCells.Get(mAttackerSelection);
+                        var jumpedCell = mCells.Get(id);
+                        var direction = (LinkDirection)jumpedCell.Args;
+                        KillBetween(attackStartCell, jumpedCell, direction);
+
+                        var attackerChess = mChessPool.Get(mAttackerSelection);
+                        AppendChessToCell(attackerChess, jumpedCell);
+                        SwitchGameStatus(GameStatus.BlackAttackFrom); // change
+                    }
+                    else
+                    {
+                        SwitchGameStatus(GameStatus.WhiteAttackFrom); // back
+                    }
                 break;
             case GameStatus.End:
                 break;
@@ -313,7 +339,7 @@ public class Game : MonoBehaviour
                 {
                     CleanAll();
 
-                    // 標示所有活著的黑棋並且有攻擊機會的格子
+                    // 標示所有活著的黑子並且有攻擊機會的格子
                     foreach (var cell in from chessUnit in mChessPool.ActiveChesses
                                          where chessUnit.ChessType == ChessType.Black && HasAttackChance(chessUnit)
                                          select mCells.Get(chessUnit.Index))
@@ -335,8 +361,29 @@ public class Game : MonoBehaviour
                 }
                 break;
             case GameStatus.WhiteAttackFrom:
+                {
+                    CleanAll();
+
+                    // 標示所有活著的白子並且有攻擊機會的格子
+                    foreach (var cell in from chessUnit in mChessPool.ActiveChesses
+                                         where chessUnit.ChessType == ChessType.White && HasAttackChance(chessUnit)
+                                         select mCells.Get(chessUnit.Index))
+                    {
+                        ShowHintAt(cell, HintType.Confirm);
+                    }
+                }
                 break;
             case GameStatus.WhiteAttackTo:
+                {
+                    CleanAll();
+
+                    // 標示可進攻的地方
+                    var cell = mCells.Get(mAttackerSelection);
+                    ShowJumpableCell(cell, LinkDirection.Bottom, cell);
+                    ShowJumpableCell(cell, LinkDirection.Up, cell);
+                    ShowJumpableCell(cell, LinkDirection.Right, cell);
+                    ShowJumpableCell(cell, LinkDirection.Left, cell);
+                }
                 break;
             case GameStatus.End:
                 break;
@@ -361,11 +408,11 @@ public class Game : MonoBehaviour
     {
         // 第一步要有格子且有棋子
         var cell_step_1 = cell.Neighbors[direction];
-        if (cell_step_1 != null && mChessPool.GetInActive(cell_step_1.Index) != null)
+        if (cell_step_1 != null && mChessPool.Get(cell_step_1.Index) != null)
         {
             // 第二步要有格子但不能有棋子
             var cell_step_2 = cell_step_1.Neighbors[direction];
-            if (cell_step_2 != null && mChessPool.GetInActive(cell_step_2.Index) == null)
+            if (cell_step_2 != null && mChessPool.Get(cell_step_2.Index) == null)
             {
                 return cell_step_2;
             }
@@ -413,12 +460,12 @@ public class Game : MonoBehaviour
 
     void KillChess(int index)
     {
-        var chess = mChessPool.GetInActive(index);
+        var chess = mChessPool.Get(index);
         if (chess == null)
             return;
 
         mChessPool.MoveToIdle(chess);
-        chess.Layout.AppendTo(m_IdleRoot);
+        Debug.Log($"KillChess at {index}");
     }
     
     void ShowHintAt(CellUnit cell, HintType type)
@@ -520,7 +567,7 @@ class ChessPool
         mIdleRoot = idleRoot;
     }
 
-    public IChessUnit GetOrNew()
+    public IChessUnit New()
     {
         IChessUnit chessUnit;
         if (IdleChesses.Count > 1)
@@ -537,7 +584,7 @@ class ChessPool
         return chessUnit;
     }
 
-    public IChessUnit GetInActive(int index)
+    public IChessUnit Get(int index)
     {
         return ActiveChesses.FirstOrDefault(c => c.Index == index);
     }
@@ -546,6 +593,8 @@ class ChessPool
     {
         if (!ActiveChesses.Contains(chess))
             return;
+
+        chess.Layout.AppendTo(mIdleRoot);
 
         ActiveChesses.Remove(chess);
         IdleChesses.Enqueue(chess);
@@ -584,6 +633,8 @@ class HintPool
     public void Kill(HintUnit hint)
     {
         hint.Layout.AppendTo(mIdleRoot); // 移動至閒置區
+
+        ActiveHints.Remove(hint); // 移除活耀區
         IdleHints.Enqueue(hint); // 放進回收桶
     }
 }

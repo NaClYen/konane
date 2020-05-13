@@ -24,59 +24,8 @@ public class Game : MonoBehaviour
 
     CellList mCells = null;
 
-    class ChessPool
-    {
-        public Queue<IChessUnit> IdleChesses = new Queue<IChessUnit>();
-        public HashSet<IChessUnit> ActiveChesses = new HashSet<IChessUnit>();
-
-        ChessLayout mPrefab;
-        Transform mIdleRoot;
-
-        public void Init(ChessLayout prefab, Transform idleRoot)
-        {
-            mPrefab = prefab;
-            mIdleRoot = idleRoot;
-        }
-
-        public IChessUnit GetOrNew()
-        {
-            IChessUnit chessUnit;
-            if (IdleChesses.Count > 1)
-                chessUnit = IdleChesses.Dequeue();
-            else
-            {
-                chessUnit = new ChessUnit();
-                chessUnit.Layout = Instantiate(mPrefab, mIdleRoot);
-            }
-
-            // 丟進工作中的池內
-            ActiveChesses.Add(chessUnit); 
-
-            return chessUnit;
-        }
-
-        public IChessUnit GetInActive(int index)
-        {
-            return ActiveChesses.FirstOrDefault(c => c.Index == index);
-        }
-
-        public void MoveToIdle(IChessUnit chess)
-        {
-            if (!ActiveChesses.Contains(chess))
-                return;
-
-            ActiveChesses.Remove(chess);
-            IdleChesses.Enqueue(chess);
-        }
-    }
-
     ChessPool mChessPool = new ChessPool();
-
-    Queue<IHintLayout> mIdleHint = new Queue<IHintLayout>(Options.CellCount);
-    HashSet<IHintLayout> mActiveHint = new HashSet<IHintLayout>();
-
-
-
+    HintPool mHintPool = new HintPool();
     InfoCenter mInfoCenter = new InfoCenter();
 
     GameStatus mCurrentStatus;
@@ -99,6 +48,9 @@ public class Game : MonoBehaviour
 
         // init chess
         InitChess();
+
+        // init hint pool
+        mHintPool.Init(m_HintPrefab, m_IdleRoot);
 
         SwitchGameStatus(GameStatus.BlackPickUp);
     }
@@ -258,12 +210,6 @@ public class Game : MonoBehaviour
         return mCells.GetByXy(x, y);
     }
 
-    IHintLayout CreateOrGetHint()
-    {
-        return (mIdleHint.Count < 1) ? Instantiate(m_HintPrefab, m_IdleRoot) : mIdleHint.Dequeue();
-    }
-
-
     void SwitchGameStatus(GameStatus s, object args = null)
     {
         if (mCurrentStatus == s)
@@ -391,15 +337,12 @@ public class Game : MonoBehaviour
 
     void ClearHints()
     {
-        if (mActiveHint.Count <= 0)
+        if (mHintPool.ActiveHints.Count <= 0)
             return;
 
-        var hints = mActiveHint.ToArray();
-        foreach (var hint in hints)
-        {
-            hint.AppendTo(m_IdleRoot); // 移動至閒置區
-            mIdleHint.Enqueue(hint); // 放進回收桶
-        }
+        var hints = mHintPool.ActiveHints.ToArray();
+        foreach (var hint in hints) 
+            mHintPool.Kill(hint);
     }
     void ClearFunctionalCellData()
     {
@@ -421,11 +364,9 @@ public class Game : MonoBehaviour
         // add to functional set
         mFunctionalCells.Add(cell.Index);
 
-        var hint = CreateOrGetHint();
+        var hint = mHintPool.CreateOrGetHint();
         hint.HintType = type;
         hint.AppendTo(cell.Layout.Transform);
-
-        mActiveHint.Add(hint);
 
         return hint;
     }
@@ -487,5 +428,79 @@ class CellList
     public CellUnit GetByXy(int x, int y)
     {
         return mCells2D[x, y];
+    }
+}
+
+class ChessPool
+{
+    public Queue<IChessUnit> IdleChesses = new Queue<IChessUnit>();
+    public HashSet<IChessUnit> ActiveChesses = new HashSet<IChessUnit>();
+
+    ChessLayout mPrefab;
+    Transform mIdleRoot;
+
+    public void Init(ChessLayout prefab, Transform idleRoot)
+    {
+        mPrefab = prefab;
+        mIdleRoot = idleRoot;
+    }
+
+    public IChessUnit GetOrNew()
+    {
+        IChessUnit chessUnit;
+        if (IdleChesses.Count > 1)
+            chessUnit = IdleChesses.Dequeue();
+        else
+        {
+            chessUnit = new ChessUnit();
+            chessUnit.Layout = Object.Instantiate(mPrefab, mIdleRoot);
+        }
+
+        // 丟進工作中的池內
+        ActiveChesses.Add(chessUnit);
+
+        return chessUnit;
+    }
+
+    public IChessUnit GetInActive(int index)
+    {
+        return ActiveChesses.FirstOrDefault(c => c.Index == index);
+    }
+
+    public void MoveToIdle(IChessUnit chess)
+    {
+        if (!ActiveChesses.Contains(chess))
+            return;
+
+        ActiveChesses.Remove(chess);
+        IdleChesses.Enqueue(chess);
+    }
+}
+
+class HintPool
+{
+    public Queue<IHintLayout> IdleHints = new Queue<IHintLayout>();
+    public HashSet<IHintLayout> ActiveHints = new HashSet<IHintLayout>();
+
+    HintLayout mPrefab;
+    Transform mIdleRoot;
+
+    public void Init(HintLayout prefab, Transform idleRoot)
+    {
+        mPrefab = prefab;
+        mIdleRoot = idleRoot;
+    }
+
+    public IHintLayout CreateOrGetHint()
+    {
+        var hint = IdleHints.Count < 1 ? Object.Instantiate(mPrefab, mIdleRoot) : IdleHints.Dequeue();
+        ActiveHints.Add(hint);
+        return hint;
+    }
+
+    public void Kill(IHintLayout hint)
+    {
+        hint.AppendTo(mIdleRoot); // 移動至閒置區
+        IdleHints.Enqueue(hint); // 放進回收桶
     }
 }

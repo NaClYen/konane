@@ -20,7 +20,7 @@ public class HintLayout : MonoBehaviour, IHintLayout
                     m_Icon.color = Color.red;
                     break;
                 case HintType.Confirm:
-                    m_Icon.color = Color.magenta; ;
+                    m_Icon.color = Color.magenta;
                     break;
                 default:
                     m_Icon.color = Color.green;

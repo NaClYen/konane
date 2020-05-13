@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class HintLayout : MonoBehaviour, IHintLayout
@@ -38,5 +36,4 @@ public class HintLayout : MonoBehaviour, IHintLayout
         // reset to fit parent
         GetComponent<RectTransform>().FitToParent();
     }
-
 }

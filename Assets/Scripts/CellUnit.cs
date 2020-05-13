@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using System.Collections.Generic;
 
 public class CellUnit
 {
@@ -8,5 +6,7 @@ public class CellUnit
 
     public ICellLayout Layout { get; set; }
 
-    public Dictionary<LinkPos, CellUnit> Neighbors = new Dictionary<LinkPos, CellUnit>();
+    public Dictionary<LinkDirection, CellUnit> Neighbors = new Dictionary<LinkDirection, CellUnit>();
+
+    public object Args { get; set; }
 }

@@ -16,6 +16,10 @@ public interface IChessLayout
     void AppendTo(Transform t);
 }
 
+public interface IHintUnit
+{
+    IHintLayout Layout { get; set; }
+}
 public interface IHintLayout
 {
     HintType HintType { get; set; }

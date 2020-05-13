@@ -1,4 +1,4 @@
-﻿public enum LinkPos
+﻿public enum LinkDirection
 {
     Up = 0,
     UpRight,

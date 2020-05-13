@@ -1,16 +1,37 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class CellLayout : MonoBehaviour
+public class CellLayout : MonoBehaviour, ICellLayout
 {
     [SerializeField]
-    Image m_BackgroundImage = null;
-    [SerializeField]
     TextMeshProUGUI m_Info = null;
+
+    IInfoCenter mInfoCenter;
+
+    Button mButton;
+
+    int mId;
+
+    void Awake()
+    {
+        mButton = this.EnsureComponent<Button>();
+    }
+
+    public ICellLayout Init(IInfoCenter ic, int id)
+    {
+        mInfoCenter = ic;
+        mId = id;
+
+        void OnClick()
+        {
+            mInfoCenter.InvokeEvent("cell touched", mId);
+        }
+
+        mButton.onClick.AddListener(OnClick);
+
+        return this;
+    }
 
     public string Info
     {
@@ -18,42 +39,29 @@ public class CellLayout : MonoBehaviour
         set => m_Info.text = value;
     }
 
-    public void SetStatus(CellStatus s)
+    public Transform Transform => transform;
+}
+
+public class FakeCellLayout : ICellLayout
+{
+    IInfoCenter mInfoCenter;
+    int mId;
+
+    public string Info { get; set; }
+
+    public Transform Transform => null;
+
+    public ICellLayout Init(IInfoCenter ic, int id)
     {
-        m_Info.text = ((int)s).ToString();
-        m_BackgroundImage.color = GetColorByStatus(s);
+        mInfoCenter = ic;
+        mId = id;
+
+        return this;
     }
 
-    Color GetColorByStatus(CellStatus s)
+    public void OnClick()
     {
-        switch (s)
-        {
-            case CellStatus.Empty:
-                return Color.clear;
-            case CellStatus.Black:
-                return Color.black;
-            case CellStatus.White:
-                return Color.white;
-            default:
-                throw new Exception();
-        }
+        mInfoCenter.InvokeEvent(Options.kEvCellTouched, mId);
     }
 
-    [ContextMenu("test - Empty")]
-    void Test_SetToEmpty()
-    {
-        SetStatus(CellStatus.Empty);
-    }
-
-    [ContextMenu("test - Black")]
-    void Test_SetToBlack()
-    {
-        SetStatus(CellStatus.Black);
-    }
-
-    [ContextMenu("test - White")]
-    void Test_SetToWhite()
-    {
-        SetStatus(CellStatus.White);
-    }
 }

@@ -159,7 +159,7 @@ MonoBehaviour:
   m_HintPrefab: {fileID: 3921122571989914431, guid: 1c3ff9a70ce91b646ae0ed7745888240,
     type: 3}
   m_TableRoot: {fileID: 354562975}
-  m_IdleChessRoot: {fileID: 521889299}
+  m_IdleRoot: {fileID: 521889299}
   Test_CellX: 0
   Test_CellY: 0
 --- !u!4 &347282907
@@ -433,7 +433,7 @@ GameObject:
   m_Component:
   - component: {fileID: 521889299}
   m_Layer: 5
-  m_Name: idel_chess_room
+  m_Name: idel_room
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

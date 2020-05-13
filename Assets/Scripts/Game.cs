@@ -19,13 +19,58 @@ public class Game : MonoBehaviour
     [SerializeField]
     RectTransform m_TableRoot = null;
     [SerializeField]
-    RectTransform m_IdleChessRoot = null;
+    RectTransform m_IdleRoot = null;
     
 
     CellList mCells = null;
 
-    Queue<IChessUnit> mIdleChesses = new Queue<IChessUnit>(Options.CellCount);
-    HashSet<IChessUnit> mActiveChesses = new HashSet<IChessUnit>();
+    class ChessPool
+    {
+        public Queue<IChessUnit> IdleChesses = new Queue<IChessUnit>();
+        public HashSet<IChessUnit> ActiveChesses = new HashSet<IChessUnit>();
+
+        ChessLayout mPrefab;
+        Transform mIdleRoot;
+
+        public void Init(ChessLayout prefab, Transform idleRoot)
+        {
+            mPrefab = prefab;
+            mIdleRoot = idleRoot;
+        }
+
+        public IChessUnit GetOrNew()
+        {
+            IChessUnit chessUnit;
+            if (IdleChesses.Count > 1)
+                chessUnit = IdleChesses.Dequeue();
+            else
+            {
+                chessUnit = new ChessUnit();
+                chessUnit.Layout = Instantiate(mPrefab, mIdleRoot);
+            }
+
+            // 丟進工作中的池內
+            ActiveChesses.Add(chessUnit); 
+
+            return chessUnit;
+        }
+
+        public IChessUnit GetInActive(int index)
+        {
+            return ActiveChesses.FirstOrDefault(c => c.Index == index);
+        }
+
+        public void MoveToIdle(IChessUnit chess)
+        {
+            if (!ActiveChesses.Contains(chess))
+                return;
+
+            ActiveChesses.Remove(chess);
+            IdleChesses.Enqueue(chess);
+        }
+    }
+
+    ChessPool mChessPool = new ChessPool();
 
     Queue<IHintLayout> mIdleHint = new Queue<IHintLayout>(Options.CellCount);
     HashSet<IHintLayout> mActiveHint = new HashSet<IHintLayout>();
@@ -78,8 +123,6 @@ public class Game : MonoBehaviour
         var isTouchFunctionCell = mFunctionalCells.Contains(id);
 
         Debug.Log($"[HandleEvCellTouched]mCurrentStatus:{mCurrentStatus}, id: {id}, isTouchFunctionCell: {isTouchFunctionCell}");
-
-
 
         switch (mCurrentStatus)
         {
@@ -167,16 +210,14 @@ public class Game : MonoBehaviour
 
     void InitChess()
     {
-        mIdleChesses = new Queue<IChessUnit>(Options.CellCount);
-        for (int i = 0; i < Options.CellCount; i++)
-        {
-            var chess = new ChessUnit();
-            chess.ChessType = GetChessTypeByInitialIndex(i); // 設定初始陣營
-            chess.Layout = Instantiate(m_ChessPrefab, m_IdleChessRoot);
+        mChessPool.Init(m_ChessPrefab, m_IdleRoot);
 
+        for (var i = 0; i < Options.CellCount; i++)
+        {
+            var chess = mChessPool.GetOrNew();
+            chess.ChessType = GetChessTypeByInitialIndex(i); // 設定初始陣營
             AppendChessToCell(chess, mCells.Get(i)); // 直接附加在對應的 cell 上
             chess.Layout.ChessType = chess.ChessType; // refresh UI
-            mActiveChesses.Add(chess); // 丟進工作中的池內
         }
     }
 
@@ -219,7 +260,7 @@ public class Game : MonoBehaviour
 
     IHintLayout CreateOrGetHint()
     {
-        return (mIdleHint.Count < 1) ? Instantiate(m_HintPrefab, m_IdleChessRoot) : mIdleHint.Dequeue();
+        return (mIdleHint.Count < 1) ? Instantiate(m_HintPrefab, m_IdleRoot) : mIdleHint.Dequeue();
     }
 
 
@@ -290,6 +331,18 @@ public class Game : MonoBehaviour
                 }
                 break;
             case GameStatus.BlackAttackFrom:
+                {
+                    ClearHints();
+                    ClearFunctionalCellData();
+
+                    // 標示所有活著的黑棋並且有攻擊機會的格子
+                    foreach (var cell in from chessUnit in mChessPool.ActiveChesses
+                                         where chessUnit.ChessType == ChessType.Black && HasAttackChance(chessUnit)
+                                         select mCells.Get(chessUnit.Index))
+                    {
+                        ShowHintAt(cell, HintType.Confirm);
+                    }
+                }
                 break;
             case GameStatus.BlackAttackTo:
                 break;
@@ -304,16 +357,48 @@ public class Game : MonoBehaviour
         }
     }
 
+    bool HasAttackChanceByDirection(IChessUnit chess, LinkPos direction)
+    {
+        var startCell = mCells.Get(chess.Index);
+
+        // 第一步要有格子且有棋子
+        var cell_step_1 = startCell.Neighbors[direction];
+        if (cell_step_1 != null && mChessPool.GetInActive(cell_step_1.Index) != null)
+        {
+            // 第二步要有格子但不能有棋子
+            var cell_step_2 = cell_step_1.Neighbors[direction];
+            if (cell_step_2 != null && mChessPool.GetInActive(cell_step_2.Index) == null)
+                return true;
+        }
+
+        // 除此之外都NG
+        return false;
+    }
+
+    bool HasAttackChance(IChessUnit chess)
+    {
+        if (HasAttackChanceByDirection(chess, LinkPos.Up))
+            return true;
+        if (HasAttackChanceByDirection(chess, LinkPos.Bottom))
+            return true;
+        if (HasAttackChanceByDirection(chess, LinkPos.Right))
+            return true;
+        if (HasAttackChanceByDirection(chess, LinkPos.Left))
+            return true;
+        
+        return false;
+    }
+
     void ClearHints()
     {
-        if (mActiveHint.Count > 0)
+        if (mActiveHint.Count <= 0)
+            return;
+
+        var hints = mActiveHint.ToArray();
+        foreach (var hint in hints)
         {
-            var hints = mActiveHint.ToArray();
-            foreach (var hint in hints)
-            {
-                hint.AppendTo(m_IdleChessRoot); // 移動至閒置區
-                mIdleHint.Enqueue(hint); // 放進回收桶
-            }
+            hint.AppendTo(m_IdleRoot); // 移動至閒置區
+            mIdleHint.Enqueue(hint); // 放進回收桶
         }
     }
     void ClearFunctionalCellData()
@@ -323,16 +408,12 @@ public class Game : MonoBehaviour
 
     void KillChess(int index)
     {
-        IChessUnit unit = null;
-        foreach (var chess in mActiveChesses)
-        {
-            if (chess.Index == index)
-                unit = chess;
-        }
+        var chess = mChessPool.GetInActive(index);
+        if (chess == null)
+            return;
 
-        mActiveChesses.Remove(unit);
-        mIdleChesses.Enqueue(unit);
-        unit.Layout.AppendTo(m_IdleChessRoot);
+        mChessPool.MoveToIdle(chess);
+        chess.Layout.AppendTo(m_IdleRoot);
     }
     
     IHintLayout ShowHintAt(CellUnit cell, HintType type)

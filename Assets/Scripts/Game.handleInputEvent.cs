@@ -14,8 +14,6 @@ public partial class Game
         {
             case GameStatus.None:
                 break;
-            case GameStatus.ReadyToStart:
-                break;
             case GameStatus.BlackPickUp:
                 {
                     if (isTouchFunctionCell)
@@ -127,8 +125,6 @@ public partial class Game
                 break;
             case GameStatus.End:
                 {
-                    var winner = (ChessType)args;
-                    Debug.LogWarning($"winner is {winner}!!!");
                 }
                 break;
         }

@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Threading;
-
 using UnityEngine;
 
 public partial class Game
@@ -12,17 +10,11 @@ public partial class Game
             throw new Exception($"不應該有一樣的遊戲狀態: {s}");
 
         mCurrentStatus = s;
+        m_GameStatus.text = mCurrentStatus.ToString();
 
         switch (mCurrentStatus)
         {
             case GameStatus.None:
-                CleanAll();
-                break;
-            case GameStatus.ReadyToStart:
-                {
-                    CleanAll();
-
-                }
                 break;
             case GameStatus.BlackPickUp:
                 {
@@ -116,6 +108,12 @@ public partial class Game
                 }
                 break;
             case GameStatus.End:
+                {
+                    CleanAll();
+
+                    var winner = (ChessType) args;
+                    m_Dialog.Show($"The Winner is ...{winner}");
+                }
                 break;
             default:
                 throw new Exception($"沒有處理的 GameStatus:{mCurrentStatus}");
@@ -125,11 +123,11 @@ public partial class Game
     void HintAllJumpableCell(int attckerIndex)
     {
         // 標示可進攻的地方
-        var cell = mCells.Get(attckerIndex);
-        ShowJumpableCell(cell, LinkDirection.Bottom);
-        ShowJumpableCell(cell, LinkDirection.Up);
-        ShowJumpableCell(cell, LinkDirection.Right);
-        ShowJumpableCell(cell, LinkDirection.Left);
+        var attackerCell = mCells.Get(attckerIndex);
+        ShowJumpableCell(attackerCell, LinkDirection.Bottom);
+        ShowJumpableCell(attackerCell, LinkDirection.Up);
+        ShowJumpableCell(attackerCell, LinkDirection.Right);
+        ShowJumpableCell(attackerCell, LinkDirection.Left);
     }
 
     int HintAllAttacker(ChessType type)

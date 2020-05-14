@@ -21,7 +21,6 @@ public enum HintType
 public enum GameStatus
 {
     None,               // 初始狀態
-    ReadyToStart,       // 準備開始的狀態
     BlackPickUp,        // 黑方選擇拿掉的目標
     BlackPickUpConfirm, // 黑方確認拿掉的目標
     WhitePickUp,        // 白方選擇拿掉的目標

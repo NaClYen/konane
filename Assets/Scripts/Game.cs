@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -20,11 +21,16 @@ public partial class Game : MonoBehaviour
     RectTransform m_TableRoot = null;
     [SerializeField]
     RectTransform m_IdleRoot = null;
+    [SerializeField]
+    Button m_RestartButton = null;
+    [SerializeField]
+    TextMeshProUGUI m_GameStatus = null;
+    [SerializeField]
+    Dialog m_Dialog = null;
     #endregion
 
 
     CellList mCells = null;
-
     ChessPool mChessPool = new ChessPool();
     HintPool mHintPool = new HintPool();
     InfoCenter mInfoCenter = new InfoCenter();
@@ -45,6 +51,7 @@ public partial class Game : MonoBehaviour
         m_BoardGridLayoutGroup.constraintCount = Options.BoardSize;
 
         mInfoCenter.OnAnyEvent += InfoCenter_OnAnyEvent;
+        m_RestartButton.onClick.AddListener(RestartGame);
 
         InitCells();
         mChessPool.Init(m_ChessPrefab, m_IdleRoot);
@@ -62,11 +69,12 @@ public partial class Game : MonoBehaviour
         mAttackerSelection = -1;
         mChessPool.RemoveAll();
         mHintPool.RemoveAll();
+        CleanAll();
+        m_Dialog.Hide();
 
         // setup
         SetupInitialChess();
 
-        //SwitchGameStatus(GameStatus.ReadyToStart);
         SwitchGameStatus(GameStatus.BlackPickUp);
     }
     void InfoCenter_OnAnyEvent(string msg, object args)

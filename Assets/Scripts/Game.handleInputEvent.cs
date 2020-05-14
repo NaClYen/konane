@@ -149,7 +149,7 @@ public partial class Game
         if (chess == null)
             return;
 
-        mChessPool.MoveToIdle(chess);
+        mChessPool.Remove(chess);
         Debug.Log($"KillChess at {index}");
     }
 }

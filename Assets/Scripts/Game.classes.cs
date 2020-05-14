@@ -76,7 +76,7 @@ class ChessPool
         return ActiveChesses.FirstOrDefault(c => c.Index == index);
     }
 
-    public void MoveToIdle(IChessUnit chess)
+    public void Remove(IChessUnit chess)
     {
         if (!ActiveChesses.Contains(chess))
             return;
@@ -85,6 +85,13 @@ class ChessPool
 
         ActiveChesses.Remove(chess);
         IdleChesses.Enqueue(chess);
+    }
+
+    public void RemoveAll()
+    {
+        var chesses = ActiveChesses.ToArray();
+        foreach (var chessUnit in chesses) 
+            Remove(chessUnit);
     }
 }
 
@@ -120,11 +127,18 @@ class HintPool
         return hint;
     }
 
-    public void Kill(HintUnit hint)
+    public void Remove(HintUnit hint)
     {
         hint.Layout.AppendTo(mIdleRoot); // 移動至閒置區
 
         ActiveHints.Remove(hint); // 移除活耀區
         IdleHints.Enqueue(hint); // 放進回收桶
+    }
+
+    public void RemoveAll()
+    {
+        var hintUnits = ActiveHints.ToArray();
+        foreach (var hintUnit in hintUnits)
+            Remove(hintUnit);
     }
 }

@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
-
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -55,11 +53,18 @@ public partial class Game : MonoBehaviour
         RestartGame();
     }
 
+    [ContextMenu("restart game")]
     void RestartGame()
     {
+        // clear
         mCurrentStatus = GameStatus.None;
+        mBleckPickedIndex = -1;
+        mAttackerSelection = -1;
+        mChessPool.RemoveAll();
+        mHintPool.RemoveAll();
 
-        InitChess();
+        // setup
+        SetupInitialChess();
 
         //SwitchGameStatus(GameStatus.ReadyToStart);
         SwitchGameStatus(GameStatus.BlackPickUp);
@@ -100,7 +105,7 @@ public partial class Game : MonoBehaviour
         }
     }
 
-    void InitChess()
+    void SetupInitialChess()
     {
         for (var i = 0; i < Options.CellCount; i++)
         {
@@ -178,7 +183,7 @@ public partial class Game : MonoBehaviour
 
         var hints = mHintPool.ActiveHints.ToArray();
         foreach (var hint in hints)
-            mHintPool.Kill(hint);
+            mHintPool.Remove(hint);
     }
     void ClearFunctionalCells()
     {

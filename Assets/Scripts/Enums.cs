@@ -1,13 +1,9 @@
 ﻿public enum LinkDirection
 {
     Up = 0,
-    UpRight,
     Right,
-    BottomRight,
     Bottom,
-    BottomLeft,
-    Left,
-    UpLeft
+    Left
 }
 
 public enum ChessType

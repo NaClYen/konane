@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -20,11 +21,16 @@ public partial class Game : MonoBehaviour
     RectTransform m_TableRoot = null;
     [SerializeField]
     RectTransform m_IdleRoot = null;
+    [SerializeField]
+    Button m_RestartButton = null;
+    [SerializeField]
+    TextMeshProUGUI m_GameStatus = null;
+    [SerializeField]
+    Dialog m_Dialog = null;
     #endregion
 
 
     CellList mCells = null;
-
     ChessPool mChessPool = new ChessPool();
     HintPool mHintPool = new HintPool();
     InfoCenter mInfoCenter = new InfoCenter();
@@ -45,14 +51,29 @@ public partial class Game : MonoBehaviour
         m_BoardGridLayoutGroup.constraintCount = Options.BoardSize;
 
         mInfoCenter.OnAnyEvent += InfoCenter_OnAnyEvent;
+        m_RestartButton.onClick.AddListener(RestartGame);
 
         InitCells();
-
-        // init chess
-        InitChess();
-
-        // init hint pool
+        mChessPool.Init(m_ChessPrefab, m_IdleRoot);
         mHintPool.Init(m_HintPrefab, m_IdleRoot);
+
+        RestartGame();
+    }
+
+    [ContextMenu("restart game")]
+    void RestartGame()
+    {
+        // clear
+        mCurrentStatus = GameStatus.None;
+        mBleckPickedIndex = -1;
+        mAttackerSelection = -1;
+        mChessPool.RemoveAll();
+        mHintPool.RemoveAll();
+        CleanAll();
+        m_Dialog.Hide();
+
+        // setup
+        SetupInitialChess();
 
         SwitchGameStatus(GameStatus.BlackPickUp);
     }
@@ -72,7 +93,7 @@ public partial class Game : MonoBehaviour
     {
         mCells = new CellList();
 
-        for (int i = 0; i < Options.CellCount; i++)
+        for (var i = 0; i < Options.CellCount; i++)
         {
             var cell = mCells.Get(i);
             cell.Layout = Instantiate(m_CellPrefab, m_TableRoot.transform);
@@ -83,36 +104,29 @@ public partial class Game : MonoBehaviour
             var x = i % Options.BoardSize;
             var y = i / Options.BoardSize;
             LinkCell(cell, LinkDirection.Up, x + 0, y - 1);
-            LinkCell(cell, LinkDirection.UpRight, x + 1, y - 1);
             LinkCell(cell, LinkDirection.Right, x + 1, y + 0);
-            LinkCell(cell, LinkDirection.BottomRight, x + 1, y + 1);
             LinkCell(cell, LinkDirection.Bottom, x + 0, y + 1);
-            LinkCell(cell, LinkDirection.BottomLeft, x - 1, y + 1);
             LinkCell(cell, LinkDirection.Left, x - 1, y + 0);
-            LinkCell(cell, LinkDirection.UpLeft, x - 1, y - 1);
 
             // debug
             cell.Layout.Info = i.ToString();
         }
     }
 
-    void InitChess()
+    void SetupInitialChess()
     {
-        mChessPool.Init(m_ChessPrefab, m_IdleRoot);
-
         for (var i = 0; i < Options.CellCount; i++)
         {
             var chess = mChessPool.New();
             chess.ChessType = GetChessTypeByInitialIndex(i); // 設定初始陣營
+            chess.Layout.ChessType = chess.ChessType; // switch icon
             AppendChessToCell(chess, mCells.Get(i)); // 直接附加在對應的 cell 上
-            chess.Layout.ChessType = chess.ChessType; // refresh UI
         }
     }
 
     void AppendChessToCell(IChessUnit chess, CellUnit cell)
     {
         var to = cell.Layout.Transform;
-        // TODO: 應該要處理 `to` 為 null 的狀況
         chess.Layout.AppendTo(to);
         chess.Index = cell.Index;
     }
@@ -177,7 +191,7 @@ public partial class Game : MonoBehaviour
 
         var hints = mHintPool.ActiveHints.ToArray();
         foreach (var hint in hints)
-            mHintPool.Kill(hint);
+            mHintPool.Remove(hint);
     }
     void ClearFunctionalCells()
     {

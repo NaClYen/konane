@@ -6,17 +6,16 @@ using Object = UnityEngine.Object;
 class CellList
 {
     CellUnit[] mCells = null;
-    CellUnit[,] mCells2D = new CellUnit[Options.BoardSize, Options.BoardSize];
+
 
     public CellList()
     {
         mCells = new CellUnit[Options.CellCount];
 
-        for (int i = 0; i < Options.CellCount; i++)
+        for (var i = 0; i < Options.CellCount; i++)
         {
             var cell = new CellUnit();
             mCells[i] = cell;
-            mCells2D[i % Options.BoardSize, i / Options.BoardSize] = cell;
         }
     }
 
@@ -33,7 +32,7 @@ class CellList
 
     public CellUnit GetByXy(int x, int y)
     {
-        return mCells2D[x, y];
+        return mCells[x + y * Options.BoardSize];
     }
 }
 
@@ -62,6 +61,10 @@ class ChessPool
             chessUnit.Layout = Object.Instantiate(mPrefab, mIdleRoot);
         }
 
+        // init data
+        chessUnit.ChessType = ChessType.Black;
+        chessUnit.Index = -1;
+
         // 丟進工作中的池內
         ActiveChesses.Add(chessUnit);
 
@@ -73,7 +76,7 @@ class ChessPool
         return ActiveChesses.FirstOrDefault(c => c.Index == index);
     }
 
-    public void MoveToIdle(IChessUnit chess)
+    public void Remove(IChessUnit chess)
     {
         if (!ActiveChesses.Contains(chess))
             return;
@@ -82,6 +85,13 @@ class ChessPool
 
         ActiveChesses.Remove(chess);
         IdleChesses.Enqueue(chess);
+    }
+
+    public void RemoveAll()
+    {
+        var chesses = ActiveChesses.ToArray();
+        foreach (var chessUnit in chesses) 
+            Remove(chessUnit);
     }
 }
 
@@ -110,15 +120,25 @@ class HintPool
             hint.Layout = Object.Instantiate(mPrefab, mIdleRoot);
         }
 
+        // init data
+        hint.Index = -1;
+
         ActiveHints.Add(hint);
         return hint;
     }
 
-    public void Kill(HintUnit hint)
+    public void Remove(HintUnit hint)
     {
         hint.Layout.AppendTo(mIdleRoot); // 移動至閒置區
 
         ActiveHints.Remove(hint); // 移除活耀區
         IdleHints.Enqueue(hint); // 放進回收桶
+    }
+
+    public void RemoveAll()
+    {
+        var hintUnits = ActiveHints.ToArray();
+        foreach (var hintUnit in hintUnits)
+            Remove(hintUnit);
     }
 }

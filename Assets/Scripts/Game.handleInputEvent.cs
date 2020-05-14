@@ -124,6 +124,8 @@ public partial class Game
                 }
                 break;
             case GameStatus.End:
+                {
+                }
                 break;
         }
     }
@@ -143,7 +145,7 @@ public partial class Game
         if (chess == null)
             return;
 
-        mChessPool.MoveToIdle(chess);
+        mChessPool.Remove(chess);
         Debug.Log($"KillChess at {index}");
     }
 }

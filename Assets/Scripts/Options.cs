@@ -4,4 +4,5 @@
     public static int CellCount = 64;
 
     public const string kEvCellTouched = "cell touched";
+    public const string kEvSetData = "set data";
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using UnityEngine;
 
 public partial class Game
 {
@@ -9,11 +10,11 @@ public partial class Game
             throw new Exception($"不應該有一樣的遊戲狀態: {s}");
 
         mCurrentStatus = s;
+        m_GameStatus.text = mCurrentStatus.ToString();
 
         switch (mCurrentStatus)
         {
             case GameStatus.None:
-                CleanAll();
                 break;
             case GameStatus.BlackPickUp:
                 {
@@ -69,59 +70,80 @@ public partial class Game
                 {
                     CleanAll();
 
-                    // 標示所有活著的黑子並且有攻擊機會的格子
-                    foreach (var cell in from chessUnit in mChessPool.ActiveChesses
-                                         where chessUnit.ChessType == ChessType.Black && HasAttackChance(chessUnit)
-                                         select mCells.Get(chessUnit.Index))
+                    var count = HintAllAttacker(ChessType.Black);
+
+                    // 表示沒有動作可執行, 陣亡!
+                    if (count == 0)
                     {
-                        ShowHintAt(cell, HintType.Confirm);
+                        Debug.Log("white win!!!");
+                        SwitchGameStatus(GameStatus.End, ChessType.White);
                     }
                 }
                 break;
             case GameStatus.BlackAttackTo:
                 {
                     CleanAll();
-
                     // 標示可進攻的地方
-                    var cell = mCells.Get(mAttackerSelection);
-                    ShowJumpableCell(cell, LinkDirection.Bottom);
-                    ShowJumpableCell(cell, LinkDirection.Up);
-                    ShowJumpableCell(cell, LinkDirection.Right);
-                    ShowJumpableCell(cell, LinkDirection.Left);
+                    HintAllJumpableCell(mAttackerSelection);
                 }
                 break;
             case GameStatus.WhiteAttackFrom:
                 {
                     CleanAll();
+                    var count = HintAllAttacker(ChessType.White);
 
-                    // 標示所有活著的白子並且有攻擊機會的格子
-                    foreach (var cell in from chessUnit in mChessPool.ActiveChesses
-                                         where chessUnit.ChessType == ChessType.White && HasAttackChance(chessUnit)
-                                         select mCells.Get(chessUnit.Index))
+                    // 表示沒有動作可執行, 陣亡!
+                    if (count == 0)
                     {
-                        ShowHintAt(cell, HintType.Confirm);
+                        Debug.Log("black win!!!");
+                        SwitchGameStatus(GameStatus.End, ChessType.Black);
                     }
                 }
                 break;
             case GameStatus.WhiteAttackTo:
                 {
                     CleanAll();
-
                     // 標示可進攻的地方
-                    var cell = mCells.Get(mAttackerSelection);
-                    ShowJumpableCell(cell, LinkDirection.Bottom);
-                    ShowJumpableCell(cell, LinkDirection.Up);
-                    ShowJumpableCell(cell, LinkDirection.Right);
-                    ShowJumpableCell(cell, LinkDirection.Left);
+                    HintAllJumpableCell(mAttackerSelection);
                 }
                 break;
             case GameStatus.End:
+                {
+                    CleanAll();
+
+                    var winner = (ChessType) args;
+                    m_Dialog.Show($"The Winner is ...{winner}");
+                }
                 break;
             default:
                 throw new Exception($"沒有處理的 GameStatus:{mCurrentStatus}");
         }
     }
 
+    void HintAllJumpableCell(int attckerIndex)
+    {
+        // 標示可進攻的地方
+        var attackerCell = mCells.Get(attckerIndex);
+        ShowJumpableCell(attackerCell, LinkDirection.Bottom);
+        ShowJumpableCell(attackerCell, LinkDirection.Up);
+        ShowJumpableCell(attackerCell, LinkDirection.Right);
+        ShowJumpableCell(attackerCell, LinkDirection.Left);
+    }
+
+    int HintAllAttacker(ChessType type)
+    {
+        var count = 0;
+        // 標示所有活著的 {type} 棋子並且有攻擊機會的格子
+        foreach (var cell in from chessUnit in mChessPool.ActiveChesses
+                             where chessUnit.ChessType == type && HasAttackChance(chessUnit)
+                             select mCells.Get(chessUnit.Index))
+        {
+            ShowHintAt(cell, HintType.Confirm);
+            count++;
+        }
+
+        return count;
+    }
 
     bool HasAttackChance(IChessUnit chess)
     {
